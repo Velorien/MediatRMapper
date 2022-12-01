@@ -50,12 +50,15 @@ async Task RunMapper(string? solutionPath, bool verbose, bool stripNamespaces = 
             return;
         }
     }
+
+    var progress = verbose
+        ? new Progress<ProjectLoadProgress>(p => Console.WriteLine($"Loading {p.FilePath}"))
+        : null;
     
-    var sln = await workspace.OpenSolutionAsync(solutionPath);
+    var sln = await workspace.OpenSolutionAsync(solutionPath, progress);
+
     foreach (var project in sln.Projects)
     {
-        if (verbose) Console.WriteLine($"Processing {project.Name}");
-        
         var compilation = await project.GetCompilationAsync();
 
         if (compilation is null) continue;
@@ -67,6 +70,11 @@ async Task RunMapper(string? solutionPath, bool verbose, bool stripNamespaces = 
             {
                 var model = compilation.GetSemanticModel(typeDeclaration.SyntaxTree);
                 var typeSymbol = model.GetDeclaredSymbol(typeDeclaration);
+
+                if (verbose)
+                {
+                    Console.WriteLine($"Processing {typeSymbol}");
+                }
 
                 var handlerInterface = typeSymbol!.Interfaces.FirstOrDefault(x =>
                     x is { Name: "IRequestHandler" or "INotificationHandler", ContainingNamespace.Name: "MediatR" });
