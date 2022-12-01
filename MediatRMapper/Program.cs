@@ -80,17 +80,7 @@ async Task RunMapper(string? solutionPath, bool verbose, bool stripNamespaces = 
                     
                     handlers.Add(new(typeSymbol.ToString()!, requestType!, responseType));
                 }
-                
-                var constructors = typeDeclaration.DescendantNodes()
-                    .OfType<ConstructorDeclarationSyntax>().ToList();
-                
-                if (constructors.Count != 1) continue;
-                
-                var ctor = model.GetDeclaredSymbol(constructors.First());
-                var mediatorParameter = ctor!.Parameters.FirstOrDefault(x => x.Type.Name == "IMediator");
-             
-                if (mediatorParameter is null) continue;
-                
+
                 var sentTypes = typeDeclaration.DescendantNodes()
                     .OfType<InvocationExpressionSyntax>()
                     .Select(x => model.GetSymbolInfo(x).Symbol)
