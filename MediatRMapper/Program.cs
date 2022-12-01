@@ -29,7 +29,7 @@ async Task RunMapper(string? solutionPath, bool verbose, bool stripNamespaces = 
 
     string GetRequest(string type)
     {
-        var handler = handlers!.FirstOrDefault(x => x.Response == type);
+        var handler = handlers.FirstOrDefault(x => x.Response == type);
         return handler?.Request ?? type;
     }
 
@@ -84,12 +84,15 @@ async Task RunMapper(string? solutionPath, bool verbose, bool stripNamespaces = 
                 var sentTypes = typeDeclaration.DescendantNodes()
                     .OfType<InvocationExpressionSyntax>()
                     .Select(x => model.GetSymbolInfo(x).Symbol)
-                    .Where(x => x!.ContainingNamespace.Name == "MediatR" && x.Name is "Send" or "Publish")
+                    .Where(x => x is IMethodSymbol { ContainingNamespace.Name: "MediatR", Name: "Send" or "Publish" })
                     .Cast<IMethodSymbol>()
                     .Select(x => x.TypeArguments.First().ToString())
                     .ToList();
 
-                senders[typeSymbol.ToString()!] = sentTypes!;
+                if (sentTypes.Any())
+                {
+                    senders[typeSymbol.ToString()!] = sentTypes!;
+                }
             }
         }
     }
